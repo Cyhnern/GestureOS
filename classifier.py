@@ -54,23 +54,64 @@ def _finger_up(landmarks, tip_idx: int, pip_idx: int) -> bool:
     return landmarks[tip_idx][1] < landmarks[pip_idx][1]
 
 
-def _thumb_up(landmarks, label: str) -> bool:
+def _thumb_extended(landmarks) -> bool:
     """
-    Başparmak dikey değil yanal hareket ettiği için diğer parmaklardan
-    farklı kontrol edilir. `label`, MediaPipe'in verdiği 'Left'/'Right'
-    etiketidir (görüntü flip edildiği için yönler buna göre ters çevrilir).
+    Baş parmağın avuçtan DIŞA doğru açılmış (ThumbUp gesture'ının parçası)
+    olup olmadığını tespit eder.
+
+    ESKİ YÖNTEM (_thumb_up, artık kullanılmıyor) baş parmağın hangi yöne
+    açıldığını x koordinatı karşılaştırmasıyla ve "sağ el / sol el" yön
+    varsayımıyla hesaplıyordu. Bu varsayım sol elde YANLIŞ çıkıyordu ve
+    ThumbUp gesture'ı sol elde HİÇBİR ZAMAN tetiklenmiyordu.
+
+    YENİ YÖNTEM yön varsaymaz: baş parmak ucunun, serçe parmağın kök eklemine
+    (PINKY_MCP) olan uzaklığını, baş parmağın orta eklemininkiyle (THUMB_IP)
+    karşılaştırır. Baş parmak avuçtan açılmışsa UCU, orta eklemden daha
+    uzakta olur - bu oran sağ elde de sol elde de, kamera açısından
+    bağımsız olarak aynı şekilde çalışır.
     """
-    tip_x = landmarks[THUMB_TIP][0]
-    ip_x = landmarks[THUMB_IP][0]
+    size = _hand_size(landmarks)
+    tip_dist = _distance(landmarks[THUMB_TIP], landmarks[PINKY_MCP]) / size
+    ip_dist = _distance(landmarks[THUMB_IP], landmarks[PINKY_MCP]) / size
+    return tip_dist > ip_dist * 1.15  # %15 pay: küçük titremelerde yanlış tetiklenmeyi önler
+
+
+def is_palm_facing_camera(landmarks, label: str) -> bool:
+    """
+    Avuç içi mi yoksa el sırtı mı kameraya dönük, SADECE 2D landmark
+    pozisyonlarından (bilek + işaret/serçe kökü) tespit eder - derinlik (z)
+    bilgisine ihtiyaç duymaz.
+
+    Mantık: bilek->işaret_MCP ve bilek->serçe_MCP vektörlerinin göreli sırası
+    (2D çapraz çarpımın işareti), el ön kolun ekseni etrafında çevrilip
+    (avuç <-> sırt) döndüğünde TERSİNE döner. Sağ ve sol el birbirinin ayna
+    simetriği olduğu için beklenen işaret hand label'a göre ters çevrilir.
+
+    ÖNEMLİ: Bu fonksiyon şu an SADECE sol el aksiyonları için (engine.py)
+    kullanılıyor - sağ elin fare kontrolünü/tıklamalarını ETKİLEMEZ.
+
+    Test notu: İşaret yönü kamera/mediapipe kurulumuna göre ters çıkabilir.
+    Eğer avuç içini gösterirken gesture hâlâ tetiklenmiyorsa (yani "-"
+    görünüyorsa), aşağıdaki `cross_z < 0` / `cross_z > 0` satırlarını
+    birbiriyle değiştir.
+    """
+    wrist = landmarks[WRIST]
+    index_mcp = landmarks[INDEX_MCP]
+    pinky_mcp = landmarks[PINKY_MCP]
+
+    v1x, v1y = index_mcp[0] - wrist[0], index_mcp[1] - wrist[1]
+    v2x, v2y = pinky_mcp[0] - wrist[0], pinky_mcp[1] - wrist[1]
+    cross_z = v1x * v2y - v1y * v2x
+
     if label == "Right":
-        return tip_x < ip_x
-    return tip_x > ip_x
+        return cross_z > 0
+    return cross_z < 0
 
 
 def fingers_up(landmarks, label: str) -> List[bool]:
     """[thumb, index, middle, ring, pinky] -> her biri açık mı (True) kapalı mı (False)."""
     return [
-        _thumb_up(landmarks, label),
+        _thumb_extended(landmarks),
         _finger_up(landmarks, INDEX_TIP, INDEX_PIP),
         _finger_up(landmarks, MIDDLE_TIP, MIDDLE_PIP),
         _finger_up(landmarks, RING_TIP, RING_PIP),

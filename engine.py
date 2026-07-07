@@ -27,7 +27,7 @@ import config
 from detector.camera import Camera
 from detector.hand_detector import HandDetector
 from detector.landmark_tracker import LandmarkTracker
-from gestures.classifier import classify, cursor_point_px, is_lock_pinch_gesture
+from gestures.classifier import classify, cursor_point_px, is_lock_pinch_gesture, is_palm_facing_camera
 from gestures.gesture_filter import GestureFilter
 from gestures.profile_manager import ProfileManager
 from controllers.mouse import MouseController
@@ -209,10 +209,24 @@ class GestureEngine:
 
         if left_hand is not None:
             left_gesture = classify(left_hand.landmarks, left_hand.label)
-            left_gesture_name = left_gesture.name
+            action_gesture_name = left_gesture.name
 
-            if left_gesture.name != "None" and self.gesture_filter.update(left_hand.label, left_gesture.name):
-                self._execute_left_action(left_gesture.name)
+            # SOL EL: OpenPalm/Fist/Victory/ThumbUp gibi parmak-pozisyonu
+            # tabanlı gesture'lar, el kameraya arkadan dönükken de (parmaklar
+            # yine aynı şekilde açık/kapalı sayıldığı için) yanlışlıkla
+            # tetiklenebiliyordu. Bu kontrol SADECE burada, sol el için
+            # uygulanıyor - classify() fonksiyonu ve dolayısıyla sağ elin
+            # davranışı hiç değişmedi. Pinch/MiddlePinch mesafe tabanlı
+            # olduğu (ve zaten sadece avuç öne dönükken doğal olarak
+            # yapılabildiği) için bu kontrolün dışında tutuluyor.
+            if action_gesture_name not in ("None", "Pinch", "MiddlePinch"):
+                if not is_palm_facing_camera(left_hand.landmarks, left_hand.label):
+                    action_gesture_name = "None"
+
+            left_gesture_name = left_gesture.name if action_gesture_name != "None" else "-"
+
+            if self.gesture_filter.update(left_hand.label, action_gesture_name):
+                self._execute_left_action(action_gesture_name)
         else:
             # Sol el sağ el gibi "grace period" gerektirmiyor (sürekli imleç
             # takibi yok, sadece anlık tetiklenen komutlar) - o yüzden el
