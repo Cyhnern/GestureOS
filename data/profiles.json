@@ -1,0 +1,42 @@
+{
+    "Office": {
+        "Pinch": "volume_down",
+        "MiddlePinch": "volume_up",
+        "Fist": "mute",
+        "OpenPalm": "play_pause",
+        "Victory": "alt_tab",
+        "ThumbUp": "escape"
+    },
+    "Gaming": {
+        "Pinch": "volume_down",
+        "MiddlePinch": "volume_up",
+        "Fist": "mute",
+        "OpenPalm": "escape",
+        "Victory": "alt_tab",
+        "ThumbUp": "play_pause"
+    },
+    "Presentation": {
+        "Pinch": "prev_slide",
+        "MiddlePinch": "next_slide",
+        "Fist": "escape",
+        "OpenPalm": "play_pause",
+        "Victory": "alt_tab",
+        "ThumbUp": "mute"
+    },
+    "Editing": {
+        "Pinch": "undo",
+        "MiddlePinch": "redo",
+        "Fist": "escape",
+        "OpenPalm": "alt_tab",
+        "Victory": "scroll_down",
+        "ThumbUp": "scroll_up"
+    },
+    "Browser": {
+        "Pinch": "scroll_down",
+        "MiddlePinch": "scroll_up",
+        "Fist": "mute",
+        "OpenPalm": "alt_tab",
+        "Victory": "next_tab",
+        "ThumbUp": "escape"
+    }
+}

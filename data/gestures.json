@@ -1,0 +1,11 @@
+{
+    "Pinch": "left_click",
+    "DoublePinch": "double_click",
+    "MiddlePinch": "right_click",
+    "Fist": "drag",
+    "OpenPalm": "lock_mouse",
+    "Wave": "escape",
+    "ThumbUp": "volume_up",
+    "ThumbDown": "volume_down",
+    "Victory": "alt_tab"
+}
