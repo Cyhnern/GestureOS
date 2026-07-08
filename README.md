@@ -154,7 +154,7 @@ GestureOS/
 | Gesture | Aksiyon |
 |---|---|
 | İşaret+başparmak pinch (kısa) | Sol tık |
-| İşaret+başparmak pinch (700ms+ tutma) | 🔒 Kilit aç/kapat |
+| İşaret+serçeparmak pinch (700ms+ tutma) | 🔒 Kilit aç/kapat |
 | Orta parmak+başparmak pinch | Sağ tık |
 | Yumruk (Fist) | Sürükle (drag) |
 | El açık, hareket | İmleç hareketi |
