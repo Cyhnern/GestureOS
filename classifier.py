@@ -104,8 +104,8 @@ def is_palm_facing_camera(landmarks, label: str) -> bool:
     cross_z = v1x * v2y - v1y * v2x
 
     if label == "Right":
-        return cross_z > 0
-    return cross_z < 0
+        return cross_z < 0
+    return cross_z > 0
 
 
 def fingers_up(landmarks, label: str) -> List[bool]:
