@@ -73,7 +73,7 @@ def _thumb_extended(landmarks) -> bool:
     size = _hand_size(landmarks)
     tip_dist = _distance(landmarks[THUMB_TIP], landmarks[PINKY_MCP]) / size
     ip_dist = _distance(landmarks[THUMB_IP], landmarks[PINKY_MCP]) / size
-    return tip_dist > ip_dist * 1.15  # %15 pay: küçük titremelerde yanlış tetiklenmeyi önler
+    return tip_dist > ip_dist * 1.10  # %10 pay: küçük titremelerde yanlış tetiklenmeyi önler
 
 
 def is_palm_facing_camera(landmarks, label: str) -> bool:
@@ -140,15 +140,16 @@ def cursor_point_px(landmarks_px):
 
 def is_lock_pinch_gesture(landmarks, label: str) -> bool:
     """
-    Sağ elde başparmak + işaret parmağı (serçe) birbirine değdirilince kilit
-    toggle'ı için kullanılır. Sol tık da aynı pinch'i kullanır; fark, kilit
-    için pozun config.LOCK_GESTURE_HOLD_MS kadar tutulmasıdır (engine.py).
+    Sağ elde başparmak + serçe parmağı birbirine değdirilince kilit toggle'ı
+    için kullanılır. Bu, sol tık için kullanılan Pinch (başparmak+işaret)
+    pozundan TAMAMEN AYRI bir fiziksel pozdur - bu sayede ikisi birbirine
+    karışmaz ve her ikisi de her zaman doğru şekilde algılanır.
     """
     if label != "Right":
         return False
 
     size = _hand_size(landmarks)
-    pinch_dist = _distance(landmarks[THUMB_TIP], landmarks[INDEX_TIP]) / size
+    pinch_dist = _distance(landmarks[THUMB_TIP], landmarks[PINKY_TIP]) / size
     return pinch_dist < config.LOCK_PINCH_THRESHOLD
 
 

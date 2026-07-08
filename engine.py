@@ -27,7 +27,7 @@ import config
 from detector.camera import Camera
 from detector.hand_detector import HandDetector
 from detector.landmark_tracker import LandmarkTracker
-from gestures.classifier import classify, cursor_point_px, is_lock_pinch_gesture, is_palm_facing_camera
+from classifier import classify, cursor_point_px, is_lock_pinch_gesture, is_palm_facing_camera
 from gestures.gesture_filter import GestureFilter
 from gestures.profile_manager import ProfileManager
 from controllers.mouse import MouseController
@@ -93,7 +93,6 @@ class GestureEngine:
         self.locked = False
         self._lock_stable_since = None
         self._lock_toggle_ready = True
-        self._lock_fired_this_pinch = False
 
         # Kısa pinch = sol tık, uzun pinch = kilit (release tabanlı tıklama)
         self._pinch_active = False
@@ -285,13 +284,15 @@ class GestureEngine:
         if stable_for >= config.LOCK_GESTURE_HOLD_MS and self._lock_toggle_ready:
             self.locked = not self.locked
             self._lock_toggle_ready = False
-            self._lock_fired_this_pinch = True
             logger.info("Mouse kontrolü %s", "KİLİTLENDİ 🔒" if self.locked else "AÇILDI 🔓")
 
     def _handle_pinch_click(self, gesture_name: str, label: str):
         """
-        Pinch için özel mantık: kısa tut-bırak = sol tık, uzun tut (700ms) = kilit.
-        Normal gesture_filter burada kullanılmaz; aksi halde kilit tutarken de tıklar.
+        Pinch (başparmak+işaret) artık SADECE sol tık için kullanılıyor.
+        Kilit ayrı bir fiziksel poz (başparmak+serçe, is_lock_pinch_gesture)
+        olduğu için burada bir üst süre sınırına gerek yok: Pinch ne kadar
+        uzun tutulursa tutulsun, bırakıldığında (ve minimum debounce süresini
+        geçtiyse) sol tık tetiklenir.
         """
         now = time.time() * 1000
         is_pinch = gesture_name == "Pinch"
@@ -300,7 +301,6 @@ class GestureEngine:
             if not self._pinch_active:
                 self._pinch_active = True
                 self._pinch_started_at = now
-                self._lock_fired_this_pinch = False
             return
 
         if not self._pinch_active:
@@ -310,12 +310,7 @@ class GestureEngine:
         self._pinch_active = False
         self._pinch_started_at = None
 
-        if (
-            not self._lock_fired_this_pinch
-            and duration >= config.GESTURE_DEBOUNCE_MS
-            and duration < config.LOCK_GESTURE_HOLD_MS
-            and not self.locked
-        ):
+        if duration >= config.GESTURE_DEBOUNCE_MS and not self.locked:
             self._execute_action("Pinch")
 
     def _execute_action(self, gesture_name: str):
