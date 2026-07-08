@@ -210,15 +210,17 @@ class GestureEngine:
             left_gesture = classify(left_hand.landmarks, left_hand.label)
             action_gesture_name = left_gesture.name
 
-            # SOL EL: OpenPalm/Fist/Victory/ThumbUp gibi parmak-pozisyonu
-            # tabanlı gesture'lar, el kameraya arkadan dönükken de (parmaklar
-            # yine aynı şekilde açık/kapalı sayıldığı için) yanlışlıkla
-            # tetiklenebiliyordu. Bu kontrol SADECE burada, sol el için
-            # uygulanıyor - classify() fonksiyonu ve dolayısıyla sağ elin
-            # davranışı hiç değişmedi. Pinch/MiddlePinch mesafe tabanlı
-            # olduğu (ve zaten sadece avuç öne dönükken doğal olarak
-            # yapılabildiği) için bu kontrolün dışında tutuluyor.
-            if action_gesture_name not in ("None", "Pinch", "MiddlePinch"):
+            # SOL EL: OpenPalm/Fist gibi "tüm parmaklar aynı durumda" olan
+            # gesture'lar, el kameraya arkadan dönükken de (parmaklar yine
+            # aynı şekilde açık/kapalı sayıldığı için) yanlışlıkla
+            # tetiklenebiliyordu - bu yüzden bu ikisi için avuç yönü kontrolü
+            # uygulanıyor. Victory/ThumbUp İSE kendine özgü, karıştırılması
+            # zor pozlar OLDUĞU İÇİN ve gerçek hayatta bu pozlar yapılırken
+            # el genelde avuç tam kameraya dönük olmadan (hafif yan/dönük)
+            # tutulduğu için bu kontrolden MUAF tutuluyor - aksi halde neredeyse
+            # hiç tetiklenmiyorlardı. Pinch/MiddlePinch zaten mesafe tabanlı
+            # olduğu için bu kontrolün dışında.
+            if action_gesture_name not in ("None", "Pinch", "MiddlePinch", "Victory", "ThumbUp"):
                 if not is_palm_facing_camera(left_hand.landmarks, left_hand.label):
                     action_gesture_name = "None"
 
